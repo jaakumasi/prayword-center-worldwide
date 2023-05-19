@@ -1,4 +1,3 @@
-import { Assembly } from "@/app/_shared/typings";
 import mongoose from "mongoose";
 
 const adminSchema = new mongoose.Schema({
