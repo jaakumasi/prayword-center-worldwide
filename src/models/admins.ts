@@ -1,10 +1,9 @@
 import mongoose from "mongoose";
 
 const adminSchema = new mongoose.Schema({
-    username: { type: String, required: true },
     password: { type: String, required: true },
-    assembly_no: { type: Number, required: true },
-    is_superadmin:{type: Boolean, required: true, default: 0}
+    member_id: { type: String, required: true },
+    is_superadmin: { type: Boolean, required: true, default: false }
 })
 
 export const Admin = mongoose.model('Admin', adminSchema);
