@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const assemblySchema = new mongoose.Schema({
     name: { type: String, required: true },
-    assembly_no: { type: Number, required: true },
+    leaders: {type: [String]},
+    assembly_no: { type: String, required: true },
     members: { type: [String] }
 })
 
