@@ -10,12 +10,12 @@ export const dbConnect = async (req: Request, res: Response, next: NextFunction)
 }
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.path.endsWith("login")) {
-        const token = req.headers['Authorization']![0].split(" ")[0];
-        const secret = new TextEncoder().encode(process.env["JWT_SECRET"]);
-        const { payload } = await jwtVerify(token, secret);
-        //@ts-ignore
-        req.payload = payload;
-    }
+    // if (!req.path.endsWith("login")) {
+    //     const token = req.headers['Authorization']![0].split(" ")[0];
+    //     const secret = new TextEncoder().encode(process.env["JWT_SECRET"]);
+    //     const { payload } = await jwtVerify(token, secret);
+    //     //@ts-ignore
+    //     req.payload = payload;
+    // }
     next();
 }
