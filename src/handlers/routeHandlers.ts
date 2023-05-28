@@ -1,20 +1,22 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
 import { MEMBER_ID } from "../constants";
 import { Admin } from "../models/admins";
 import { Assembly } from "../models/assembly";
 import {
     generateAssemblyCode,
+    generateMemberId,
+    generateShortRandomPassword,
     getAssemblyMembers,
-    getPayload
+    getPayload,
+    verifyMemberObject
 } from "./utilities";
+import { Member } from "../models/members";
 
 /* Admin Handlers */
 export const handlePostAdmin = async (req: Request, res: Response) => {
     const { member_id, is_superadmin } = req.body;
-    const randomBytes = crypto.randomBytes(3);
-    const randomPassword = randomBytes.readUintBE(0, 2).toString();
+    const randomPassword = generateShortRandomPassword();
     const hashedPassword = await bcrypt.hash(randomPassword, 10);
     const newAdmin = new Admin({
         password: hashedPassword,
@@ -23,7 +25,7 @@ export const handlePostAdmin = async (req: Request, res: Response) => {
     });
     await newAdmin.save();
 
-    // TODO: send password to as SMS to phone
+    // TODO: send password as SMS to phone
 
     return res.sendStatus(200);
 }
@@ -31,6 +33,23 @@ export const handlePostAdmin = async (req: Request, res: Response) => {
 export const handleGetAdmin = async (req: Request, res: Response) => {
     const admins = await Admin.find();
     return res.status(200).json({ data: admins });
+}
+
+export const handleDeleteAdmin = async (req: Request, res: Response) => {
+    await Admin.findByIdAndDelete(req.body._id);
+    return res.status(200).json({ success: true });
+}
+
+export const handlePutAdmin = async (req: Request, res: Response) => {
+    const { _id, password, is_superadmin } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await Admin.findByIdAndUpdate(_id, {
+        $set: {
+            is_superadmin,
+            password: hashedPassword,
+        }
+    });
+    return res.status(200).json({ success: true });
 }
 
 /* END */
@@ -59,7 +78,7 @@ export const handleGetAssembly = async (req: Request, res: Response) => {
     const admin = await Admin.findOne({ username });
     // if admin is null or password is wrong, ...
     if (!admin || !await bcrypt.compare(password, admin.password)) {
-        return res.status(200).json({ message: "Invalid credentials. Please try again!" });
+        return res.status(200).json({ message: "Invalid credential(s). Please try again!" });
     }
     // fetch all assemblies for superadmins
     if (admin.is_superadmin) {
@@ -75,6 +94,31 @@ export const handleGetAssembly = async (req: Request, res: Response) => {
         const assembly = await Assembly.findOne({ assembly_no: admin.assembly_no });
         return res.status(200).json({ data: getAssemblyMembers(assembly) });
     }
+}
+
+/* END */
+
+/* Member Handlers */
+export const handlePostMember = async (req: Request, res: Response) => {
+    const { error } = verifyMemberObject(req.body);
+    if (error) return res.status(403).json({ error: error.details[0].message });
+    const member_id = await generateMemberId();
+    const newMember = new Member({
+        member_id, ...req.body
+    });
+    await newMember.save();
+
+    return res.status(201).json({ data: newMember });
+}
+
+export const handleUpdateMember = async (req: Request, res: Response) => {
+    const updateList = req.body;
+    for (let i = 0; i < updateList.length; i++) {
+        delete updateList[0]._id;
+        await Member.findByIdAndUpdate(updateList[0]._id, { $set: updateList[0] })
+    }
+
+    return res.status(200).json({ success: true })
 }
 
 /* END */

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
-import { SignJWT } from "jose";
-import { handlePostAssembly, handleGetAssembly, handlePostAdmin, handleGetAdmin } from "./handlers/routeHandlers";
+import { JWTPayload, SignJWT } from "jose";
+import { handlePostAssembly, handleGetAssembly, handlePostAdmin, handleGetAdmin, handlePostMember, handleUpdateMember } from "./handlers/routeHandlers";
 import { Admin } from "./models/admins";
 import { Member } from "./models/members";
 
@@ -13,7 +13,7 @@ export const login = async (req: Request, res: Response) => {
     }
     // @ts-ignore
     const { assembly_no, member_id } = await Member.findOne({ member_id: adminMatch.member_id });
-    const payload = {
+    const payload: JWTPayload = {
         assembly_no,
         member_id,
         phone,
@@ -47,4 +47,14 @@ export const assembly = async (req: Request, res: Response) => {
         handleGetAssembly(req, res);
     }
 
+}
+
+export const member = async (req: Request, res: Response) => {
+    const method = req.method;
+    if (method === "POST") {
+        handlePostMember(req, res);
+    }
+    else if (method === "PUT") {
+        handleUpdateMember(req, res);
+    }
 }

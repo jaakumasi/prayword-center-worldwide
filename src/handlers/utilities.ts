@@ -1,4 +1,6 @@
 import { Request } from "express";
+import crypto from "crypto";
+import Joi from "joi";
 import { Assembly } from "../models/assembly";
 import { Member } from "../models/members";
 
@@ -38,5 +40,32 @@ export const generateAssemblyCode = async (name: string, annex_of: string | null
     }
 
     return code;
+}
+
+export const generateMemberId = async () => {
+    let member_id: number | string;
+    const numberOfMembers = await Member.count();
+    member_id = numberOfMembers + 1;
+    if (member_id < 100) member_id = member_id.toString().padStart(3, "0");
+    return member_id;
+}
+
+export const generateShortRandomPassword = () => {
+    const randomBytes = crypto.randomBytes(3);
+    return randomBytes.readUintBE(0, 2).toString();
+}
+
+
+export const verifyMemberObject = (memberObj: Object) => {
+    const schema = Joi.object({
+        name: Joi.string().required(),
+        gender: Joi.string().allow(['M', 'F']).required(),
+        phone: Joi.string().required(),
+        address: Joi.string().required(),
+        assembly_no: Joi.string().required(),
+        nok_name: Joi.string(),
+        nok_phone: Joi.string(),
+    })
+    return schema.validate(memberObj);
 }
 
